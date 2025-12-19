@@ -10,15 +10,9 @@ class MyRect(QGraphicsRectItem):
         elif event.key() == Qt.Key.Key_Right:
             self.setPos(self.pos().x() + 10, self.pos().y())
 
-        elif event.key() == Qt.Key.Key_Up:
-            self.setPos(self.pos().x(), self.pos().y() - 10)
-        
-        elif event.key() == Qt.Key.Key_Down:
-            self.setPos(self.pos().x(), self.pos().y() + 10)
-        
         elif event.key() == Qt.Key.Key_Space:
             bullet = Bullet()
-            bullet.setPos(rect_done.pos().x(), rect_done.pos().y())
+            bullet.setPos(player.pos().x(), player.pos().y())
             scene.addItem(bullet)
 
 
@@ -33,27 +27,33 @@ class Bullet(QGraphicsRectItem, QObject):
         self.timer.timeout.connect(self.move)
         self.timer.start(50)
 
-        print("I happen")
-
     def move(self):
         self.setPos(self.pos().x(), self.pos().y() - 10)
+        if self.pos().y() < 0 - self.rect().height():
+            scene.removeItem(self)
 
 
 app = QApplication(sys.argv)
 
 scene = QGraphicsScene()
 
+view = QGraphicsView(scene)
+
 rect = QRectF(0, 0, 100, 100)
 
-rect_done = MyRect(rect)
+player = MyRect(rect)
 
-scene.addItem(rect_done)
+view.setFixedSize(800, 600)
+view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-rect_done.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable)
-rect_done.setFocus()
+scene.setSceneRect(0, 0, 800, 600)
 
-view = QGraphicsView(scene)
-view.setVerticalScrollBar(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+player.setPos((view.width() - rect.width()) / 2, view.height() - rect.height())
+player.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable)
+player.setFocus()
+
+scene.addItem(player)
 view.show()
 
 app.exec()
