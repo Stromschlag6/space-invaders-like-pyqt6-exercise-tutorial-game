@@ -78,7 +78,9 @@ class Enemy(QGraphicsRectItem, QObject):
         if self.pos().y() + self.rect().height() > view.height():
             scene.removeItem(self)
             del self
-            
+            health.decrease()
+            return
+        
         self.setPos(self.pos().x(), self.pos().y() + 5)
 
 
@@ -98,6 +100,24 @@ class Score(QGraphicsTextItem):
 
     def getScore(self):
         return self.__score
+    
+
+class Health(QGraphicsTextItem):
+    def __init__(self, parent=None):
+        super().__init__()
+
+        self.__score = 3
+
+        self.setPlainText(f"Health: {self.__score}")
+        self.setDefaultTextColor(Qt.GlobalColor.red)
+        self.setFont(QFont("times", 16))
+
+    def decrease(self):
+        self.__score -= 1
+        self.setPlainText(f"Health: {self.__score}")
+
+    def getHealth(self):
+        return self.__score
 
 
 app = QApplication(sys.argv)
@@ -109,6 +129,7 @@ view = QGraphicsView(scene)
 player = MyRect()
 
 score = Score()
+health = Health()
 
 view.setFixedSize(800, 600)
 view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -120,8 +141,11 @@ player.setPos((view.width() - player.rect().width()) / 2, view.height() - player
 player.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable)
 player.setFocus()
 
+health.setPos(health.pos().x(), health.pos().y() + 25)
+
 scene.addItem(player)
 scene.addItem(score)
+scene.addItem(health)
 view.show()
 
 app.exec()
