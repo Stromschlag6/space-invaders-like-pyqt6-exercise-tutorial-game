@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView, QGraphicsTextItem
+from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView, QGraphicsTextItem, QGraphicsPixmapItem
 from PyQt6.QtCore import Qt, QTimer, QObject, QUrl
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 import random, sys, resources
 
@@ -28,6 +28,7 @@ class Player(QGraphicsRectItem, QObject):
             bullet = Bullet()
             bullet.bang()
             bullet.setPos(player.pos().x(), player.pos().y())
+            print(bullet.pixmap().isNull())
             scene.addItem(bullet)
     
     def spawn(self):
@@ -35,18 +36,18 @@ class Player(QGraphicsRectItem, QObject):
         scene.addItem(enemy)
 
 
-class Bullet(QGraphicsRectItem, QObject):
+class Bullet(QGraphicsPixmapItem, QObject):
     def __init__(self):
         super().__init__()
 
-        self.setRect(0, 0, 5, 15)
+        self.setPixmap(QPixmap(":/images/images/tank_shell.png").scaled(17, 50, Qt.AspectRatioMode.KeepAspectRatio))
 
         self.player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.timer = QTimer()
 
         self.player.setAudioOutput(self.audio_output)
-        self.player.setSource(QUrl("qrc:/space_invader_game/sounds/bullet_sound_test.mp3"))
+        self.player.setSource(QUrl("qrc:/sounds/sounds/bullet_sound_test.mp3"))
         self.audio_output.setVolume(50)
 
         self.timer.timeout.connect(self.move)
@@ -54,6 +55,7 @@ class Bullet(QGraphicsRectItem, QObject):
 
     def move(self):
         self.setPos(self.pos().x(), self.pos().y() - 10)
+        # Collision TODO Problem when bullets collide with each other and enemy at the same time
         if self.collidingItems():
             colliding_item = self.collidingItems()[0]
             if type(colliding_item) is Enemy:
@@ -63,7 +65,7 @@ class Bullet(QGraphicsRectItem, QObject):
                 del colliding_item
                 score.increase()
 
-        elif self.pos().y() < 0 - self.rect().height():
+        elif self.pos().y() < 0:
             scene.removeItem(self)
             del self
     #TODO if bullet is destroyed too soon, media player gets deleted before entire sound is played, needs longer lifecycle    
@@ -71,13 +73,12 @@ class Bullet(QGraphicsRectItem, QObject):
         self.player.play()
 
     
-class Enemy(QGraphicsRectItem, QObject):
+class Enemy(QGraphicsPixmapItem, QObject):
     def __init__(self):
         super().__init__()
 
-        width = 100
-
-        self.setRect(random.randint(width, view.width() - width), 0, width, 100)
+        self.setPixmap(QPixmap(":/images/images/enemy_tank.png").scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
+        self.setPos(random.randint(0, view.width() - self.pixmap().width()), 0)
 
         self.timer = QTimer()
 
@@ -86,7 +87,7 @@ class Enemy(QGraphicsRectItem, QObject):
 
     def move(self):
         # TODO Mechanism for losing the game
-        if self.pos().y() + self.rect().height() > view.height():
+        if self.pos().y() + self.pixmap().size().height() > view.height():
             scene.removeItem(self)
             del self
             health.decrease()
@@ -137,6 +138,8 @@ scene = QGraphicsScene()
 
 view = QGraphicsView(scene)
 
+background = QGraphicsPixmapItem()
+
 player = Player()
 
 media_player = QMediaPlayer()
@@ -162,7 +165,7 @@ scene.addItem(score)
 scene.addItem(health)
 # TODO background music not repeating itself
 media_player.setAudioOutput(audio_output)
-media_player.setSource(QUrl("qrc:/space_invader_game/sounds/background_music_test.mp3"))
+media_player.setSource(QUrl("qrc:/sounds/sounds/background_music_test.mp3"))
 audio_output.setVolume(50)
 media_player.play()
 

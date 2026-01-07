@@ -1,6 +1,12 @@
 <RCC>
-    <qresource prefix="/space_invader_game" >
+    <qresource prefix="/sounds" >
         <file>sounds/background_music_test.mp3</file>
         <file>sounds/bullet_sound_test.mp3</file>
+    </qresource>
+    <qresource prefix="/images" >
+        <file>images/background.jpg</file>
+        <file>images/enemy_tank.png</file>
+        <file>images/tank.png</file>
+        <file>images/tank_shell.png</file>
     </qresource>
 </RCC>
