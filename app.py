@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView, QGraphicsTextItem, QGraphicsPixmapItem
+from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsTextItem, QGraphicsPixmapItem
 from PyQt6.QtCore import Qt, QTimer, QObject, QUrl
-from PyQt6.QtGui import QFont, QPixmap, QBrush, QImage
+from PyQt6.QtGui import QFont, QPixmap, QBrush, QImage, QPainterPath, QPen, QPainter, QColor, QPainterPathStroker
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 import random, sys, resources
 
@@ -9,11 +9,74 @@ class Player(QGraphicsPixmapItem, QObject):
         super().__init__()
 
         self.setPixmap(QPixmap(":/images/images/tank.png").scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
+        self.contour_path = self.create_contour_path()
 
         self.timer = QTimer()
 
         self.timer.timeout.connect(self.spawn)
         self.timer.start(3000)
+
+    def create_contour_path(self):
+        """
+        Erstellt einen QPainterPath entlang der sichtbaren Pixel (Alpha > 0)
+        """
+        image = self.pixmap().toImage()
+        width = image.width()
+        height = image.height()
+        path = QPainterPath()
+
+        # einfache Kontur-Algorithmus:
+        # wir überprüfen jeden Pixel; wenn Alpha > 0 und irgendein Nachbar Alpha=0, ist er Rand
+        for y in range(height):
+            for x in range(width):
+                color = image.pixelColor(x, y)
+                if color.alpha() == 0:
+                    continue  # unsichtbar
+
+                # Prüfe Nachbarn
+                neighbors = [
+                    (x-1, y), (x+1, y),
+                    (x, y-1), (x, y+1)
+                ]
+                for nx, ny in neighbors:
+                    if nx < 0 or nx >= width or ny < 0 or ny >= height:
+                        is_edge = True
+                    else:
+                        if image.pixelColor(nx, ny).alpha() == 0:
+                            is_edge = True
+                        else:
+                            is_edge = False
+                    if is_edge:
+                        # zeichne kleinen Punkt an Rand
+                        path.addRect(x, y, 1, 1)
+                        break
+
+        # optional: Pfad glätten, indem wir QPainterPathStroker nutzen
+        stroker = QPainterPathStroker()
+        stroker.setWidth(1.5)  # Linienstärke
+        stroker.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        stroker.setCapStyle(Qt.PenCapStyle.RoundCap)
+        return stroker.createStroke(path)
+    
+    def paint(self, painter, option, widget=None):
+        super().paint(painter, option, widget)
+
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen(QColor(0, 0, 255, 50), 1.5)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        # nur Kontur zeichnen
+        painter.drawPath(self.contour_path)
+
+    def shape(self):
+        return self.contour_path
+
+    def spawn(self):
+        enemy = Enemy()
+        scene.addItem(enemy)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Left:
@@ -31,10 +94,6 @@ class Player(QGraphicsPixmapItem, QObject):
             print(bullet.pixmap().isNull())
             scene.addItem(bullet)
     
-    def spawn(self):
-        enemy = Enemy()
-        scene.addItem(enemy)
-
 
 class Bullet(QGraphicsPixmapItem, QObject):
     def __init__(self):
@@ -80,6 +139,8 @@ class Enemy(QGraphicsPixmapItem, QObject):
         self.setPixmap(QPixmap(":/images/images/enemy_tank.png").scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
         self.setPos(random.randint(0, view.width() - self.pixmap().width()), 0)
 
+        self.contour_path = self.create_contour_path()
+
         self.timer = QTimer()
 
         self.timer.timeout.connect(self.move)
@@ -94,6 +155,58 @@ class Enemy(QGraphicsPixmapItem, QObject):
             return
         
         self.setPos(self.pos().x(), self.pos().y() + 5)
+
+    def create_contour_path(self):
+        """
+        Erstellt einen QPainterPath entlang der sichtbaren Pixel (Alpha > 0)
+        """
+        image = self.pixmap().toImage()
+        width = image.width()
+        height = image.height()
+        path = QPainterPath()
+
+        for y in range(height):
+            for x in range(width):
+                color = image.pixelColor(x, y)
+                if color.alpha() == 0:
+                    continue 
+
+                neighbors = [
+                    (x-1, y), (x+1, y),
+                    (x, y-1), (x, y+1)
+                ]
+                for nx, ny in neighbors:
+                    if nx < 0 or nx >= width or ny < 0 or ny >= height:
+                        is_edge = True
+                    else:
+                        if image.pixelColor(nx, ny).alpha() == 0:
+                            is_edge = True
+                        else:
+                            is_edge = False
+                    if is_edge:
+                        path.addRect(x, y, 1, 1)
+                        break
+
+        stroker = QPainterPathStroker()
+        stroker.setWidth(1.5)  # Linienstärke
+        stroker.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        stroker.setCapStyle(Qt.PenCapStyle.RoundCap)
+        return stroker.createStroke(path)
+    
+    def paint(self, painter, option, widget=None):
+        super().paint(painter, option, widget)
+
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen(QColor(255, 0, 0, 50), 1.5)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        painter.drawPath(self.contour_path)
+
+    def shape(self):
+        return self.contour_path
 
 
 class Score(QGraphicsTextItem):
@@ -154,7 +267,7 @@ scene.setSceneRect(0, 0, 800, 600)
 scene.setBackgroundBrush(QBrush(QImage(":/images/images/background.jpg")))
 
 player.setPos((view.width() - player.pixmap().width()) / 2, view.height() - player.pixmap().height())
-player.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable)
+player.setFlag(QGraphicsPixmapItem.GraphicsItemFlag.ItemIsFocusable)
 player.setFocus()
 
 health.setPos(health.pos().x(), health.pos().y() + 25)
