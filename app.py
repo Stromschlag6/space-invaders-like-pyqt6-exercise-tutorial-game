@@ -164,7 +164,7 @@ scene.addItem(score)
 scene.addItem(health)
 # TODO background music not repeating itself
 media_player.setAudioOutput(audio_output)
-media_player.setSource(QUrl("qrc:/sounds/sounds/background_music_test.mp3"))
+media_player.setSource(QUrl("qrc:/sounds/sounds/war_background_music.mp3"))
 audio_output.setVolume(50)
 media_player.play()
 
