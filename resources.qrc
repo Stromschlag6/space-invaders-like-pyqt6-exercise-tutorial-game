@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/space_invader_game" >
+        <file>sounds/background_music_test.mp3</file>
+    </qresource>
+</RCC>

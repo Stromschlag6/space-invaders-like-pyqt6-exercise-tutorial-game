@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView, QGraphicsTextItem
-from PyQt6.QtCore import Qt, QTimer, QObject
+from PyQt6.QtCore import Qt, QTimer, QObject, QUrl
 from PyQt6.QtGui import QFont
-import random, sys
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
+import random, sys, resources
 
 class MyRect(QGraphicsRectItem, QObject):
     def __init__(self):
@@ -128,6 +129,9 @@ view = QGraphicsView(scene)
 
 player = MyRect()
 
+media_player = QMediaPlayer()
+audio_output = QAudioOutput()
+
 score = Score()
 health = Health()
 
@@ -146,6 +150,12 @@ health.setPos(health.pos().x(), health.pos().y() + 25)
 scene.addItem(player)
 scene.addItem(score)
 scene.addItem(health)
+
+media_player.setAudioOutput(audio_output)
+media_player.setSource(QUrl("qrc:/space_invader_game/sounds/background_music_test.mp3"))
+audio_output.setVolume(50)
+media_player.play()
+
 view.show()
 
 app.exec()
