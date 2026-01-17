@@ -1,14 +1,14 @@
 from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView, QGraphicsTextItem, QGraphicsPixmapItem
 from PyQt6.QtCore import Qt, QTimer, QObject, QUrl
-from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtGui import QFont, QPixmap, QBrush, QImage
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 import random, sys, resources
 
-class Player(QGraphicsRectItem, QObject):
+class Player(QGraphicsPixmapItem, QObject):
     def __init__(self):
         super().__init__()
 
-        self.setRect(0, 0, 100, 100)
+        self.setPixmap(QPixmap(":/images/images/tank.png").scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
 
         self.timer = QTimer()
 
@@ -21,13 +21,13 @@ class Player(QGraphicsRectItem, QObject):
                 self.setPos(self.pos().x() - 10, self.pos().y())
 
         elif event.key() == Qt.Key.Key_Right:
-            if self.pos().x() + self.rect().width() < view.width():
+            if self.pos().x() + self.pixmap().width() < view.width():
                 self.setPos(self.pos().x() + 10, self.pos().y())
 
         elif event.key() == Qt.Key.Key_Space:
             bullet = Bullet()
             bullet.bang()
-            bullet.setPos(player.pos().x(), player.pos().y())
+            bullet.setPos(player.pos().x() + (player.pixmap().width() / 2 - bullet.pixmap().width() / 2) , player.pos().y())
             print(bullet.pixmap().isNull())
             scene.addItem(bullet)
     
@@ -138,8 +138,6 @@ scene = QGraphicsScene()
 
 view = QGraphicsView(scene)
 
-background = QGraphicsPixmapItem()
-
 player = Player()
 
 media_player = QMediaPlayer()
@@ -153,8 +151,9 @@ view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
 scene.setSceneRect(0, 0, 800, 600)
+scene.setBackgroundBrush(QBrush(QImage(":/images/images/background.jpg")))
 
-player.setPos((view.width() - player.rect().width()) / 2, view.height() - player.rect().height())
+player.setPos((view.width() - player.pixmap().width()) / 2, view.height() - player.pixmap().height())
 player.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable)
 player.setFocus()
 
