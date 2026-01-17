@@ -4,7 +4,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 import random, sys, resources
 
-class MyRect(QGraphicsRectItem, QObject):
+class Player(QGraphicsRectItem, QObject):
     def __init__(self):
         super().__init__()
 
@@ -137,7 +137,7 @@ scene = QGraphicsScene()
 
 view = QGraphicsView(scene)
 
-player = MyRect()
+player = Player()
 
 media_player = QMediaPlayer()
 audio_output = QAudioOutput()
