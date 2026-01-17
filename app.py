@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView
-from PyQt6.QtCore import QRectF, Qt, QTimer, QObject
+from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsRectItem, QGraphicsView, QGraphicsTextItem
+from PyQt6.QtCore import Qt, QTimer, QObject
+from PyQt6.QtGui import QFont
 import random, sys
 
 class MyRect(QGraphicsRectItem, QObject):
@@ -52,6 +53,7 @@ class Bullet(QGraphicsRectItem, QObject):
                 scene.removeItem(colliding_item)
                 del self
                 del colliding_item
+                score.increase()
 
         elif self.pos().y() < 0 - self.rect().height():
             scene.removeItem(self)
@@ -72,12 +74,30 @@ class Enemy(QGraphicsRectItem, QObject):
         self.timer.start(250)
 
     def move(self):
-        # Losing the game
-        """ if self.pos().y() + self.rect().height() > view.height():
-            del player
-            print("You lost!") """
+        # TODO Mechanism for losing the game
+        if self.pos().y() + self.rect().height() > view.height():
+            scene.removeItem(self)
+            del self
+            
         self.setPos(self.pos().x(), self.pos().y() + 5)
-        
+
+
+class Score(QGraphicsTextItem):
+    def __init__(self, parent=None):
+        super().__init__()
+
+        self.__score = 0
+
+        self.setPlainText(f"Score: {self.__score}")
+        self.setDefaultTextColor(Qt.GlobalColor.blue)
+        self.setFont(QFont("times", 16))
+
+    def increase(self):
+        self.__score += 1
+        self.setPlainText(f"Score: {self.__score}")
+
+    def getScore(self):
+        return self.__score
 
 
 app = QApplication(sys.argv)
@@ -87,6 +107,8 @@ scene = QGraphicsScene()
 view = QGraphicsView(scene)
 
 player = MyRect()
+
+score = Score()
 
 view.setFixedSize(800, 600)
 view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -98,9 +120,8 @@ player.setPos((view.width() - player.rect().width()) / 2, view.height() - player
 player.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable)
 player.setFocus()
 
-# Spawn enemies
-
 scene.addItem(player)
+scene.addItem(score)
 view.show()
 
 app.exec()
