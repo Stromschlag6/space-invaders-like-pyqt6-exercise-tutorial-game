@@ -26,6 +26,7 @@ class MyRect(QGraphicsRectItem, QObject):
 
         elif event.key() == Qt.Key.Key_Space:
             bullet = Bullet()
+            bullet.bang()
             bullet.setPos(player.pos().x(), player.pos().y())
             scene.addItem(bullet)
     
@@ -40,7 +41,13 @@ class Bullet(QGraphicsRectItem, QObject):
 
         self.setRect(0, 0, 5, 15)
 
+        self.player = QMediaPlayer()
+        self.audio_output = QAudioOutput()
         self.timer = QTimer()
+
+        self.player.setAudioOutput(self.audio_output)
+        self.player.setSource(QUrl("qrc:/space_invader_game/sounds/bullet_sound_test.mp3"))
+        self.audio_output.setVolume(50)
 
         self.timer.timeout.connect(self.move)
         self.timer.start(50)
@@ -59,6 +66,9 @@ class Bullet(QGraphicsRectItem, QObject):
         elif self.pos().y() < 0 - self.rect().height():
             scene.removeItem(self)
             del self
+    #TODO if bullet is destroyed too soon, media player gets deleted before entire sound is played, needs longer lifecycle    
+    def bang(self):
+        self.player.play()
 
     
 class Enemy(QGraphicsRectItem, QObject):
