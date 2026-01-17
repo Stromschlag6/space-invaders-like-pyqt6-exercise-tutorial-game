@@ -150,7 +150,7 @@ health.setPos(health.pos().x(), health.pos().y() + 25)
 scene.addItem(player)
 scene.addItem(score)
 scene.addItem(health)
-
+# TODO background music not repeating itself
 media_player.setAudioOutput(audio_output)
 media_player.setSource(QUrl("qrc:/space_invader_game/sounds/background_music_test.mp3"))
 audio_output.setVolume(50)
